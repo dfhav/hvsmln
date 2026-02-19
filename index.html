@@ -23,8 +23,6 @@ button:hover{background:#1e293b}
 .card p{font-size:20px;font-weight:700;margin:8px 0}
 #chart{width:50% !important;max-width:400px;margin:auto;margin-top:30px}
 .matrix{margin-top:35px;padding:20px;background:#eef2f7;border-radius:14px;font-size:14px}
-.kpi-grid{margin-top:25px;display:grid;grid-template-columns:1fr;gap:20px}
-.kpi-card{background:#f8fafc;padding:18px;border-radius:14px;text-align:center}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);justify-content:center;align-items:center}
 .modal-content{background:white;padding:25px;border-radius:12px;max-width:500px}
 .close{float:right;cursor:pointer;font-weight:bold}
@@ -34,7 +32,7 @@ button:hover{background:#1e293b}
 <body>
 <div class="container">
 <h1>Strategic Full Funnel Allocator PRO</h1>
-<p class="subtitle">Binet & Field | Share of Voice | KPI per Target</p>
+<p class="subtitle">Scenario planning dinamico per Target vs Total Market</p>
 
 <div class="grid">
 <div>
@@ -48,8 +46,10 @@ button:hover{background:#1e293b}
 <label>Market Size (€ milioni)</label>
 <input type="number" id="marketSize" value="500">
 
-<label>Target</label>
-<select id="target" onchange="updateTargetInfo()"></select>
+<label>Target (opzionale)</label>
+<select id="target" onchange="updateTargetInfo()">
+<option value="">Nessun target specifico (Total Market)</option>
+</select>
 <div class="target-info" id="targetUniverse"></div>
 </div>
 
@@ -65,31 +65,57 @@ button:hover{background:#1e293b}
 
 <div class="results" id="results"></div>
 <canvas id="chart"></canvas>
-
 <div class="matrix" id="matrix"></div>
-<div class="kpi-grid" id="kpis"></div>
 </div>
 
 <div class="modal" id="modal"><div class="modal-content"><span class="close" onclick="closeModal()">X</span><div id="modalText"></div></div></div>
 
 <script>
-const targets={"Individui":52238950,"Adu 25-54":23383730,"Adu 18-34":10458850,"RA":25570960,"Adu 35-54":17034800,"Adu 25-64":31970760,"Adu Over64":13882540,"Adu Over18":49786916,"Adu 18-24":4010306,"Adu 25-34":6271725,"Adu 35-44":7491822,"Adu 35-64":25621840,"Adu 45-54":9510176,"Adu 55-64":8570061,"Adu Over35":39823304,"Adu 20-54":26374360,"Adu 18-64":35856000,"Donne 18-64":18067830,"GEN Z (14-29)":9463985,"Donne 18-34":5074900,"Donne 18-44":8835440,"Donne 18-54":13357340,"Donne 25-44":6670890,"Donne 25-54":11417750,"Uomini 18-64":18012860,"MILLENIALS (29-44)":11291260,"GEN X (45-60)":15122390,"BOOMERS (61-70)":10560170};
+const targets={
+"GEN Z (14-29)":{size:9463985,type:"digital-heavy"},
+"Adu 18-34":{size:10458850,type:"digital-heavy"},
+"Donne 18-34":{size:5074900,type:"digital-heavy"},
+"MILLENIALS (29-44)":{size:11291260,type:"balanced"},
+"GEN X (45-60)":{size:15122390,type:"balanced"},
+"BOOMERS (61-70)":{size:10560170,type:"traditional"},
+"Adu Over64":{size:13882540,type:"traditional"}
+};
 
 const targetSelect=document.getElementById("target");
 for(let t in targets){let opt=document.createElement("option");opt.value=t;opt.text=t;targetSelect.appendChild(opt)}
 
-function updateTargetInfo(){let t=document.getElementById("target").value;document.getElementById("targetUniverse").innerHTML="Universe: "+targets[t].toLocaleString()}
-updateTargetInfo();
+function updateTargetInfo(){
+let t=document.getElementById("target").value;
+if(t===""){
+ document.getElementById("targetUniverse").innerHTML="";
+}else{
+ document.getElementById("targetUniverse").innerHTML="Universe: "+targets[t].size.toLocaleString();
+}
+}
 
 function calculate(){
 let spend=parseFloat(document.getElementById("spend").value);
 let marketSize=parseFloat(document.getElementById("marketSize").value);
 let timeframe=document.getElementById("timeframe").value;
+let selectedTarget=document.getElementById("target").value;
 
 let upper=45,mid=30,lower=25;
+
 if(timeframe==="Short term"){upper-=10;lower+=10}
 if(timeframe==="Long term"){upper+=10;lower-=10}
 
+// Scenario differentiation
+if(selectedTarget!==""){
+ let profile=targets[selectedTarget].type;
+ if(profile==="digital-heavy"){
+  lower+=10;upper-=5;mid-=5;
+ }
+ if(profile==="traditional"){
+  upper+=10;lower-=5;mid-=5;
+ }
+}
+
+// Saturation
 let sat=Math.log(spend+1);
 upper+=sat*2;lower-=sat*2;
 
@@ -109,23 +135,24 @@ matrix.innerHTML=`
 <strong>Binet & Field Ratio</strong> ${bfRatio}:1 <span class="info-btn" onclick="openModal('bf')">i</span><br><br>
 <strong>Share of Voice stimata</strong> ${sov.toFixed(2)}% <span class="info-btn" onclick="openModal('sov')">i</span><br><br>
 <strong>Excess Share of Voice (ESOV)</strong> ${esov}% <span class="info-btn" onclick="openModal('esov')">i</span>`;
-
-
 }
 
 function openModal(type){
 let text="";
-if(type==='bf')text="La Binet & Field Ratio misura l'equilibrio tra investimenti Brand (Upper+Mid) e Activation (Lower). Valori 60:40 o 2:1 sono tipici di strategie orientate alla crescita di lungo periodo.";
-if(type==='sov')text="La Share of Voice indica la quota investimento del brand rispetto al totale mercato pubblicitario stimato.";
-if(type==='esov')text="L'Excess Share of Voice rappresenta la differenza tra SOV e quota di mercato (SOM). ESOV positivo è correlato a crescita futura.";
+if(type==='bf')text="La Binet & Field Ratio misura l'equilibrio tra Brand building e Activation. Strategie di crescita sostenibile tendono verso 60:40 o 2:1.";
+if(type==='sov')text="La Share of Voice indica la quota investimento del brand rispetto al totale mercato pubblicitario.";
+if(type==='esov')text="L'Excess Share of Voice è la differenza tra SOV e quota di mercato. ESOV positivo è correlato a crescita futura.";
 document.getElementById('modalText').innerHTML=text;
 document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none'}
 
 let chart;
-function renderChart(u,m,l){const ctx=document.getElementById('chart');if(chart)chart.destroy();chart=new Chart(ctx,{type:'doughnut',data:{labels:['Upper','Mid','Lower'],datasets:[{data:[u,m,l],backgroundColor:['#0f172a','#334155','#94a3b8']}]} ,options:{plugins:{legend:{position:'bottom'}}}})}
+function renderChart(u,m,l){
+const ctx=document.getElementById('chart');
+if(chart)chart.destroy();
+chart=new Chart(ctx,{type:'doughnut',data:{labels:['Upper','Mid','Lower'],datasets:[{data:[u,m,l],backgroundColor:['#E50100','#008596','#0F172A']}]} ,options:{plugins:{legend:{position:'bottom'}}}});
+}
 </script>
 </body>
 </html>
-
