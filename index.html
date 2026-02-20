@@ -37,11 +37,25 @@ button:hover{background:#1e293b}
 <div class="grid">
 <div>
 <div class="section-title">Brand & Market Variables</div>
+
 <label>Categoria</label>
-<select id="category"><option>All categories</option><option>Automotive</option><option>FMCG</option><option>Finance</option><option>Retail Large</option><option>Retail Small</option><option>Telco</option><option>Travel</option></select>
+<select id="category">
+<option>All categories</option>
+<option>Automotive</option>
+<option>FMCG</option>
+<option>Finance</option>
+<option>Retail Large</option>
+<option>Retail Small</option>
+<option>Telco</option>
+<option>Travel</option>
+</select>
 
 <label>Market Type</label>
-<select id="marketType"><option>Mass Market</option><option>Niche</option><option>Not Applicable</option></select>
+<select id="marketType">
+<option>Mass Market</option>
+<option>Niche</option>
+<option>Not Applicable</option>
+</select>
 
 <label>Market Size (€ milioni)</label>
 <input type="number" id="marketSize" value="500">
@@ -51,14 +65,22 @@ button:hover{background:#1e293b}
 <option value="">Nessun target specifico (Total Market)</option>
 </select>
 <div class="target-info" id="targetUniverse"></div>
+
 </div>
 
 <div>
 <div class="section-title">Investment Strategy</div>
+
 <label>Annual Media Spend (€ milioni)</label>
 <input type="number" id="spend" value="20">
+
 <label>Optimisation Time-frame</label>
-<select id="timeframe"><option>Short term</option><option>Medium term</option><option>Long term</option></select>
+<select id="timeframe">
+<option>Short term</option>
+<option>Medium term</option>
+<option>Long term</option>
+</select>
+
 <button onclick="calculate()">Run Simulation</button>
 </div>
 </div>
@@ -66,23 +88,58 @@ button:hover{background:#1e293b}
 <div class="results" id="results"></div>
 <canvas id="chart"></canvas>
 <div class="matrix" id="matrix"></div>
+
 </div>
 
-<div class="modal" id="modal"><div class="modal-content"><span class="close" onclick="closeModal()">X</span><div id="modalText"></div></div></div>
+<div class="modal" id="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">X</span>
+<div id="modalText"></div>
+</div>
+</div>
 
 <script>
-const targets={
-"GEN Z (14-29)":{size:9463985,type:"digital-heavy"},
+
+const targets = {
+
+"Target Entità Individui":{size:52238950,type:"balanced"},
+"Adu 25-54":{size:23383730,type:"balanced"},
 "Adu 18-34":{size:10458850,type:"digital-heavy"},
+"RA":{size:25570960,type:"balanced"},
+"Adu 35-54":{size:17034800,type:"balanced"},
+"Adu 25-64":{size:31970760,type:"balanced"},
+"Adu Over64":{size:13882540,type:"traditional"},
+"Adu Over18":{size:49786916,type:"balanced"},
+"Adu 18-24":{size:4010306,type:"digital-heavy"},
+"Adu 25-34":{size:6271725,type:"digital-heavy"},
+"Adu 35-44":{size:7491822,type:"balanced"},
+"Adu 35-64":{size:25621840,type:"balanced"},
+"Adu 45-54":{size:9510176,type:"balanced"},
+"Adu 55-64":{size:8570061,type:"traditional"},
+"Adu Over35":{size:39823304,type:"balanced"},
+"Adu 20-54":{size:26374360,type:"balanced"},
+"Adu 18-64":{size:35856000,type:"balanced"},
+"Donne 18-64":{size:18067830,type:"balanced"},
+"GEN Z (14-29)":{size:9463985,type:"digital-heavy"},
 "Donne 18-34":{size:5074900,type:"digital-heavy"},
-"MILLENIALS (29-44)":{size:11291260,type:"balanced"},
-"GEN X (45-60)":{size:15122390,type:"balanced"},
-"BOOMERS (61-70)":{size:10560170,type:"traditional"},
-"Adu Over64":{size:13882540,type:"traditional"}
+"Donne 18-44":{size:8835440,type:"balanced"},
+"Donne 18-54":{size:13357340,type:"balanced"},
+"Donne 25-44":{size:6670890,type:"balanced"},
+"Donne 25-54":{size:11417750,type:"balanced"},
+"Uomini 18-64":{size:18012860,type:"balanced"},
+"MILLENIALS (29 – 44)":{size:11291260,type:"balanced"},
+"GEN X (45 – 60)":{size:15122390,type:"balanced"},
+"BOOMERS (61 – 70)":{size:10560170,type:"traditional"}
+
 };
 
 const targetSelect=document.getElementById("target");
-for(let t in targets){let opt=document.createElement("option");opt.value=t;opt.text=t;targetSelect.appendChild(opt)}
+for(let t in targets){
+let opt=document.createElement("option");
+opt.value=t;
+opt.text=t;
+targetSelect.appendChild(opt);
+}
 
 function updateTargetInfo(){
 let t=document.getElementById("target").value;
@@ -94,6 +151,7 @@ if(t===""){
 }
 
 function calculate(){
+
 let spend=parseFloat(document.getElementById("spend").value);
 let marketSize=parseFloat(document.getElementById("marketSize").value);
 let timeframe=document.getElementById("timeframe").value;
@@ -104,20 +162,15 @@ let upper=45,mid=30,lower=25;
 if(timeframe==="Short term"){upper-=10;lower+=10}
 if(timeframe==="Long term"){upper+=10;lower-=10}
 
-// Scenario differentiation
 if(selectedTarget!==""){
  let profile=targets[selectedTarget].type;
- if(profile==="digital-heavy"){
-  lower+=10;upper-=5;mid-=5;
- }
- if(profile==="traditional"){
-  upper+=10;lower-=5;mid-=5;
- }
+ if(profile==="digital-heavy"){lower+=10;upper-=5;mid-=5;}
+ if(profile==="traditional"){upper+=10;lower-=5;mid-=5;}
 }
 
-// Saturation
 let sat=Math.log(spend+1);
-upper+=sat*2;lower-=sat*2;
+upper+=sat*2;
+lower-=sat*2;
 
 let total=upper+mid+lower;
 upper=Math.round((upper/total)*100);
@@ -128,13 +181,18 @@ let sov=(spend/marketSize)*100;
 let bfRatio=((upper+mid)/lower).toFixed(2);
 let esov=(sov-10).toFixed(2);
 
-results.innerHTML=`<div class="card"><h3>Upper (Brand)</h3><p>${upper}%</p></div><div class="card"><h3>Mid</h3><p>${mid}%</p></div><div class="card"><h3>Lower (Activation)</h3><p>${lower}%</p></div>`;
+results.innerHTML=
+`<div class="card"><h3>Upper (Brand)</h3><p>${upper}%</p></div>
+<div class="card"><h3>Mid</h3><p>${mid}%</p></div>
+<div class="card"><h3>Lower (Activation)</h3><p>${lower}%</p></div>`;
+
 renderChart(upper,mid,lower);
 
 matrix.innerHTML=`
 <strong>Binet & Field Ratio</strong> ${bfRatio}:1 <span class="info-btn" onclick="openModal('bf')">i</span><br><br>
 <strong>Share of Voice stimata</strong> ${sov.toFixed(2)}% <span class="info-btn" onclick="openModal('sov')">i</span><br><br>
 <strong>Excess Share of Voice (ESOV)</strong> ${esov}% <span class="info-btn" onclick="openModal('esov')">i</span>`;
+
 }
 
 function openModal(type){
@@ -151,8 +209,15 @@ let chart;
 function renderChart(u,m,l){
 const ctx=document.getElementById('chart');
 if(chart)chart.destroy();
-chart=new Chart(ctx,{type:'doughnut',data:{labels:['Upper','Mid','Lower'],datasets:[{data:[u,m,l],backgroundColor:['#E50100','#008596','#0F172A']}]} ,options:{plugins:{legend:{position:'bottom'}}}});
+chart=new Chart(ctx,{
+type:'doughnut',
+data:{labels:['Upper','Mid','Lower'],
+datasets:[{data:[u,m,l],
+backgroundColor:['#E50100','#008596','#0F172A']}]},
+options:{plugins:{legend:{position:'bottom'}}}
+});
 }
+
 </script>
 </body>
 </html>
